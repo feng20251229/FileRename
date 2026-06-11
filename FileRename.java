@@ -2,7 +2,13 @@ package replace;
 import java.util.Scanner;
 import java.io.*;
 
+interface RenameStrategy {
+    void prePrint();
+    void renameFile();
+}
+
 public class FileRename {
+    //运行主程序
     public static void main(String[] args) {
         FileRename renameToFile = new FileRename();
         try {
@@ -11,19 +17,44 @@ public class FileRename {
             e.showMessage();
         }
     }
-
+    //实际运行程序
     private void run() throws UnRightInput {
         try(Scanner sc = new Scanner(System.in)) {
             System.out.println("请输入需要批量更改文件的文件夹路径");
             File oldFile = new File(sc.nextLine());
-            System.out.println("需要添加的前缀");
-            String add = sc.nextLine();
-
             File[] files = validGetFiles(oldFile);
-            if(files == null || !isRightPre(add)) {
-                throw new UnRightInput();
+
+            System.out.println("请选择功能");
+            System.out.println("1. 添加前缀");
+            System.out.println("2. 删除前缀");
+            System.out.println("3. 替换文本");
+            System.out.println("4. 数字编号格式化(2-1 -> 2-01)");
+
+            System.out.println("输入数字选择");
+            int number = sc.nextInt();
+            sc.nextLine();
+
+            RenameStrategy strategy = null;
+            if( number == 1 || number == 2){
+                System.out.println("需要添加的前缀");
+                String add = sc.nextLine();
+                if (number == 1) {
+                    strategy = new AddPrefix(files, add);
+                }
+                else {
+                    strategy = new RemovePrefix();
+                }
+
+                if(files == null || !isRightPre(add)) {
+                    throw new UnRightInput();
+                }
+            } else if (number == 3) {
+                strategy = new Replace();
+            } else {
+                strategy = new ReplaceDigit();
             }
-            prePrint(files, add);
+            
+            strategy.prePrint();
 
             System.out.println("确认是否修改(y/n)");
             String input = sc.nextLine();
@@ -34,11 +65,11 @@ public class FileRename {
                 return ;
             }
 
-            renameFile(files, add);
+            strategy.renameFile();
         }
         System.out.println("完成");
     }
-
+    //判断是否是有效的文件夹
     private File[] validGetFiles(File oldFile) {
         boolean is = true;
         if (!oldFile.exists()) {
@@ -56,7 +87,7 @@ public class FileRename {
             }
         return is ? files : null;
     }
-
+    //判断添加前缀是否合法
     private boolean isRightPre(String add) {
         boolean is = add.matches("[a-zA-Z]\\w*");
         if (!is) {
@@ -64,20 +95,37 @@ public class FileRename {
         }
         return is;
     }
+}
 
-    private void prePrint(File[] files, String add) {
+class UnRightInput extends Exception {
+    public UnRightInput() {}
+
+    public void showMessage() {
+        System.out.println("错误XXX");
+    }
+}
+
+class AddPrefix implements RenameStrategy {
+    private File[] files;
+    private String prefix;
+
+    AddPrefix(File[] files, String pre) {
+        this.files = files;
+        prefix = pre;
+    }
+
+    public void prePrint() {
         for (File file : files) {
-            System.out.println(file.getName() + "->" + add + file.getName());
+            System.out.println(file.getName() + "->" + prefix + file.getName());
         }
     }
 
-
-    private void renameFile(File[] files, String add) {
+    public void renameFile() {
         int successCount = 0;
         int failCount = 0;
 
         for (File oldFile : files) {
-                String newName = add + oldFile.getName();
+                String newName = prefix + oldFile.getName();
                 File newFile = new File(oldFile.getParent(), newName);
 
                 if (newFile.exists()) {
@@ -96,14 +144,31 @@ public class FileRename {
 
         System.out.println("改名完成：成功：" + successCount + "，失败 " + failCount);
     }
-
 }
 
-class UnRightInput extends Exception {
-    public UnRightInput() {}
+class RemovePrefix implements RenameStrategy {
+    public void prePrint() {
 
-    public void showMessage() {
-        System.out.println("错误XXX");
+    }
+    public void renameFile() {
+
     }
 }
 
+class Replace implements RenameStrategy {
+    public void prePrint() {
+
+    }
+    public void renameFile() {
+
+    }
+}
+
+class ReplaceDigit implements RenameStrategy {
+    public void prePrint() {
+
+    }
+    public void renameFile() {
+
+    }
+}
