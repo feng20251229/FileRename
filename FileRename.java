@@ -1,6 +1,9 @@
 package replace;
 import java.util.Scanner;
 import java.io.*;
+import javax.swing.JFileChooser;
+import javax.swing.UIManager;
+import javax.swing.filechooser.FileSystemView;
 
 interface RenameStrategy {
     void prePrint();
@@ -10,6 +13,14 @@ interface RenameStrategy {
 public class FileRename {
     //运行主程序
     public static void main(String[] args) {
+        // 换一个系统主题
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //JFileChooser chooser = new JFileChooser();
+
         FileRename renameToFile = new FileRename();
         try {
             renameToFile.run();
@@ -21,8 +32,11 @@ public class FileRename {
     private void run() throws UnRightInput {
         try(Scanner sc = new Scanner(System.in)) {
             //输入需要更改文件夹的路径
-            System.out.println("请输入需要批量更改文件的文件夹路径");
-            File oldFile = new File(sc.nextLine());
+            File oldFile = chooseFolder();
+            if (oldFile == null) {
+                System.out.println("未选择文件夹，程序退出");
+                return;
+            }
             File[] files = validGetFiles(oldFile);
             //选择功能
             System.out.println("请选择功能");
@@ -78,6 +92,22 @@ public class FileRename {
             strategy.renameFile();
         }
         System.out.println("完成");
+    }
+
+    private File chooseFolder() {
+        // 创建文件夹选择器
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setDialogTitle("请选择文件夹");
+
+        //设置默认打开路径（桌面）
+        chooser.setCurrentDirectory(FileSystemView.getFileSystemView().getHomeDirectory());
+
+        int result = chooser.showOpenDialog(null);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            return chooser.getSelectedFile();
+        }
+        return null;
     }
     //判断是否是有效的文件夹
     private File[] validGetFiles(File oldFile) {
