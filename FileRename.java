@@ -74,8 +74,9 @@ public class FileRename {
 
     // 实际运行程序
     private void run() throws UnRightInput {
+        Scanner sc = new Scanner(System.in);
         while (true) {
-            try (Scanner sc = new Scanner(System.in)) {
+            try {
                 // 输入需要更改文件夹的路径
                 File[] files = selectFolder();
                 // 选择功能
@@ -95,6 +96,13 @@ public class FileRename {
                 if (!userInsisted(sc)) {
                     break;
                 }
+            } catch (UnRightInput e) {
+                System.out.println("操作取消或输入无效，请重新开始");
+                e.showMessage();
+            } catch (Exception e) {
+                System.out.println("发生未知错误，程序将退出");
+                e.printStackTrace();
+                break;
             }
         }
         System.out.println("完成");
@@ -146,16 +154,19 @@ public class FileRename {
         System.out.println("2. 删除前缀");
         System.out.println("3. 替换文本");
         System.out.println("4. 数字编号格式化(2-1 -> 2-01)");
-
         System.out.println("输入数字选择");
+
         String input = sc.nextLine();
         // 用回车实现操作的具体机制
-        if (input.isEmpty() && !lastChoice.isEmpty()) {
+        if (input.trim().isEmpty()) {
+            if (lastChoice.isEmpty()) {
+                System.out.println("没有上次记录，请重新输入");
+                return selectFuntion(sc);
+            }
             input = lastChoice;
         }
-        if (!input.isEmpty()) {
-            config.set("last.choice", input);
-        }
+
+        config.set("last.choice", input);
         return Integer.parseInt(input);
     }
 
